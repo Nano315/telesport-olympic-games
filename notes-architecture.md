@@ -2,7 +2,7 @@
 
 Mes notes d'analyse du starter Angular de TéléSport (projet 2, OpenClassrooms).
 
-L'étape 1 consiste à comprendre le code existant et à lister ce qui ne va pas, sans rien modifier. L'étape 2 consiste à décider de l'architecture cible, toujours sans toucher au code. Les deux sont dans ce document : l'analyse d'abord, l'architecture à la fin.
+L'étape 1 consiste à comprendre le code existant et à lister ce qui ne va pas, sans rien modifier. L'étape 2 consiste à décider de l'architecture cible, toujours sans toucher au code. Les deux sont dans ce document : l'analyse d'abord, l'architecture ensuite, et à la fin ce que la refactorisation de l'étape 3 a changé au plan.
 
 ## Comment j'ai analysé le projet
 
@@ -472,3 +472,17 @@ Dans cet ordre, un commit par ligne :
 8. Le nettoyage : styles globaux, `console.log`, code mort, route morte.
 9. Le responsive et l'accessibilité : breakpoints, focus, alternatives textuelles des graphiques.
 10. La documentation : `README.md` et `ARCHITECTURE.md`.
+
+## Ce que l'étape 3 a changé au plan
+
+La refactorisation est faite. Elle a tenu en huit commits plutôt que dix, et le plan a bougé sur quatre points. Je les note ici parce que ce sont eux qui m'ont appris quelque chose.
+
+Les pages 6 et 7 sont parties dans le même commit. Le dashboard navigue désormais avec l'identifiant du pays, alors que l'ancienne page de détail attendait son nom : les livrer séparément aurait laissé l'application cassée entre deux commits.
+
+Les dossiers des pages s'appellent `dashboard-page/` et `country-detail-page/`, et non `dashboard/` et `country-detail/`, pour que le nom du dossier corresponde à celui des fichiers qu'il contient.
+
+`MedalsByCountry` et `MedalsByEdition` sont déclarées dans `olympic.stats.ts`, avec les fonctions qui les produisent, plutôt que dans `models/`. Ce ne sont pas des formes de données mais des formes d'affichage.
+
+Enfin, une surprise à l'outillage : `ng test` ne compilait pas à cause de la spec héritée du CLI, et une fois ce problème corrigé, le `require.context` de `src/test.ts` n'était plus supporté par le builder d'Angular 18. Ce fichier a été supprimé, le builder découvrant seul les fichiers `*.spec.ts`. Ce point figurait dans mes notes comme dette mineure (H4) ; il bloquait en réalité toute la suite.
+
+Résultat : `ng lint` passe sans erreur, `ng test` exécute 51 tests, et aucun `any` ne subsiste. L'architecture livrée est décrite dans [ARCHITECTURE.md](ARCHITECTURE.md).
