@@ -1,4 +1,34 @@
-/* You can add global styles to this file, and also import other style files */
+/* Styles globaux : uniquement les jetons de couleur et d'espacement, et les
+   utilitaires. Les styles d'un composant vivent dans son propre fichier SCSS. */
+
+:root {
+    /* Le vert de la maquette. Sur fond coloré portant du texte blanc, on utilise
+       la variante foncée : #0b868f ne donne que 4,36:1 avec du blanc, sous le
+       seuil AA de 4,5:1. */
+    --color-primary: #0b868f;
+    --color-primary-dark: #0a6b72;
+    --color-text: #1a1a1a;
+    --color-text-muted: #595959;
+    --color-border: #d0d7de;
+    --radius: 10px;
+    --space: 1rem;
+    --chart-height: 22rem;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* TODO (commit de nettoyage) : les règles ci-dessous appartiennent aux pages
+   qui n'ont pas encore été refaites. */
 .heading {
     flex-direction: column;
 }

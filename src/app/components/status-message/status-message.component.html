@@ -1,0 +1,23 @@
+@switch (status) {
+  @case ('loading') {
+    <div class="skeleton" role="status">
+      <span class="visually-hidden">Loading…</span>
+      <div class="skeleton__box skeleton__box--title"></div>
+      <div class="skeleton__box skeleton__box--chart"></div>
+    </div>
+  }
+
+  @case ('empty') {
+    <p class="notice">{{ noDataMessage }}</p>
+  }
+
+  @case ('error') {
+    <div class="notice notice--error" role="alert">
+      <p class="notice__text">{{ message }}</p>
+      <div class="notice__actions">
+        <button type="button" class="button" (click)="retry.emit()">Retry</button>
+        <a class="button button--link" routerLink="/">Back to home</a>
+      </div>
+    </div>
+  }
+}
