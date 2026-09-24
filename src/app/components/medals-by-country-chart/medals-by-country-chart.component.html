@@ -1,0 +1,38 @@
+<figure class="chart">
+  <div class="chart__canvas">
+    <canvas
+      #canvas
+      role="img"
+      aria-label="Pie chart of the total number of medals won by each country. The same figures are available in the table below."
+    ></canvas>
+  </div>
+
+  <figcaption class="chart__caption">
+    Select a country to open its details.
+  </figcaption>
+
+  <details class="chart__data">
+    <summary>Medals per country as a table</summary>
+    <table>
+      <caption class="visually-hidden">Total medals per country</caption>
+      <thead>
+        <tr>
+          <th scope="col">Country</th>
+          <th scope="col">Medals</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (country of data; track country.id) {
+          <tr>
+            <th scope="row">
+              <button type="button" class="link" (click)="countrySelected.emit(country.id)">
+                {{ country.country }}
+              </button>
+            </th>
+            <td>{{ country.medals }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </details>
+</figure>

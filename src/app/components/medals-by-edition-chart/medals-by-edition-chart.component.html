@@ -1,0 +1,32 @@
+<figure class="chart">
+  <div class="chart__canvas">
+    <canvas
+      #canvas
+      role="img"
+      [attr.aria-label]="
+        'Line chart of the medals won by ' + countryName + ' at each edition of the Olympic Games. The same figures are available in the table below.'
+      "
+    ></canvas>
+  </div>
+
+  <details class="chart__data">
+    <summary>Medals per edition as a table</summary>
+    <table>
+      <caption class="visually-hidden">Medals per edition</caption>
+      <thead>
+        <tr>
+          <th scope="col">Year</th>
+          <th scope="col">Medals</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (edition of data; track edition.year) {
+          <tr>
+            <th scope="row">{{ edition.year }}</th>
+            <td>{{ edition.medals }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </details>
+</figure>
