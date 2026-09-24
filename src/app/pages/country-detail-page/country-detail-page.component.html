@@ -1,0 +1,19 @@
+@if (view$ | async; as view) {
+  @if (view.status === 'loaded') {
+    <app-header [title]="view.title" [indicators]="view.indicators" />
+    <app-medals-by-edition-chart [data]="view.chart" [countryName]="view.countryName" />
+  } @else {
+    @if (view.title) {
+      <app-header [title]="view.title" />
+    }
+    <app-status-message
+      [status]="view.status"
+      [message]="view.message"
+      (retry)="reload()"
+    />
+  }
+
+  <p class="back">
+    <a class="button" routerLink="/">Back to home</a>
+  </p>
+}

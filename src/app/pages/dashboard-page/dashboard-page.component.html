@@ -1,0 +1,16 @@
+@if (view$ | async; as view) {
+  <app-header [title]="view.title" [indicators]="view.indicators" />
+
+  @if (view.status === 'loaded') {
+    <app-medals-by-country-chart
+      [data]="view.chart"
+      (countrySelected)="openCountry($event)"
+    />
+  } @else {
+    <app-status-message
+      [status]="view.status"
+      [message]="view.message"
+      (retry)="reload()"
+    />
+  }
+}

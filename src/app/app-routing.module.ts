@@ -1,22 +1,19 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-import { HomeComponent } from './pages/home/home.component';
+import { COUNTRY_ROUTE_SEGMENT } from './app.constants';
+import { CountryDetailPageComponent } from './pages/country-detail-page/country-detail-page.component';
+import { DashboardPageComponent } from './pages/dashboard-page/dashboard-page.component';
 import { NotFoundComponent } from './pages/not-found/not-found.component';
-import { CountryComponent } from "./pages/country/country.component";
 
 const routes: Routes = [
   {
     path: '',
-    component: HomeComponent,
+    component: DashboardPageComponent,
   },
   {
-    path : 'country/:countryName',
-    component : CountryComponent
-  },
-
-  {
-    path : 'not-found',
-    component : NotFoundComponent
+    // L'identifiant, et non le nom du pays : c'est ce qu'exposera l'API.
+    path: `${COUNTRY_ROUTE_SEGMENT}/:id`,
+    component: CountryDetailPageComponent,
   },
   {
     path: '**',
