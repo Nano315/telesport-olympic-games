@@ -16,10 +16,31 @@
     --chart-height: 22rem;
 }
 
+/* Points de rupture des spécifications. La hauteur des graphiques est un
+   jeton, donc les composants n'ont pas à connaître ces seuils. */
+@media (max-width: 767px) {
+    :root {
+        --chart-height: 15rem;
+        --space: 0.75rem;
+    }
+}
+
+@media (min-width: 1200px) {
+    :root {
+        --chart-height: 26rem;
+    }
+}
+
 *,
 *::before,
 *::after {
     box-sizing: border-box;
+}
+
+/* Le focus doit rester visible pour la navigation au clavier. */
+:focus-visible {
+    outline: 3px solid var(--color-primary-dark);
+    outline-offset: 2px;
 }
 
 body {
