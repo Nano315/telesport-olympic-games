@@ -1,10 +1,11 @@
-/* Styles globaux : uniquement les jetons de couleur et d'espacement, et les
-   utilitaires. Les styles d'un composant vivent dans son propre fichier SCSS. */
+/* Styles globaux : jetons de couleur et d'espacement, base typographique,
+   utilitaires partagés. Les styles d'un composant vivent dans son propre
+   fichier SCSS, encapsulé par Angular. */
 
 :root {
-    /* Le vert de la maquette. Sur fond coloré portant du texte blanc, on utilise
-       la variante foncée : #0b868f ne donne que 4,36:1 avec du blanc, sous le
-       seuil AA de 4,5:1. */
+    /* Le vert de la maquette. Sur un fond coloré portant du texte blanc, on
+       utilise la variante foncée : #0b868f ne donne que 4,36:1 avec du blanc,
+       sous le seuil AA de 4,5:1. */
     --color-primary: #0b868f;
     --color-primary-dark: #0a6b72;
     --color-text: #1a1a1a;
@@ -13,6 +14,40 @@
     --radius: 10px;
     --space: 1rem;
     --chart-height: 22rem;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #fff;
+    color: var(--color-text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial,
+        sans-serif;
+    line-height: 1.5;
+}
+
+/* Un bouton d'action, utilisé par plusieurs composants. */
+.button {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-primary-dark);
+    border-radius: var(--radius);
+    background: var(--color-primary-dark);
+    color: #fff;
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.button--link {
+    background: transparent;
+    color: var(--color-primary-dark);
+    text-decoration: underline;
 }
 
 .visually-hidden {
@@ -26,49 +61,3 @@
     white-space: nowrap;
     border: 0;
 }
-
-/* TODO (commit de nettoyage) : les règles ci-dessous appartiennent aux pages
-   qui n'ont pas encore été refaites. */
-.heading {
-    flex-direction: column;
-}
-
-.center {
-    display: flex;
-    justify-content: center;
-    margin: 5px;
-
-    div {
-        background: #0b868f;
-        padding: 10px;
-        border-radius: 10px;
-        color: white;
-    }
-}
-
-.split {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 20px;
-    margin: 5px;
-
-    div {
-        padding: 10px;
-        border: solid #0b868f 1px;
-        border-radius: 10px;
-        color: gray;
-        margin: 0px;
-
-        p {
-            text-align: center;
-            margin: 0;
-        }
-
-        p:last-child {
-            font-weight: bold;
-            color: black;
-        }
-    }
-}
-
