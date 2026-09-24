@@ -2,7 +2,7 @@
 
 Mes notes d'analyse du starter Angular de TéléSport (projet 2, OpenClassrooms).
 
-L'étape 1 consiste à comprendre le code existant et à lister ce qui ne va pas, sans rien modifier. C'est l'objet de ce document. J'ajouterai l'architecture cible à la fin, en étape 2.
+L'étape 1 consiste à comprendre le code existant et à lister ce qui ne va pas, sans rien modifier. L'étape 2 consiste à décider de l'architecture cible, toujours sans toucher au code. Les deux sont dans ce document : l'analyse d'abord, l'architecture à la fin.
 
 ## Comment j'ai analysé le projet
 
@@ -325,4 +325,150 @@ Les NgModules enfin. Les consignes parlent de `app.module.ts` et de mettre à jo
 
 ## Architecture cible
 
-À compléter à l'étape 2.
+Je garde l'arborescence proposée par l'énoncé, à savoir `models/`, `services/`, `components/`, `pages/`, et je n'ajoute rien au-dessus. Pas de `core/`, pas de `shared/`, pas de module de fonctionnalité. J'ai hésité sur `core/`, qui est courant dans les projets Angular, mais le cahier des charges impose noir sur blanc le chemin `src/app/services/data.service.ts` : le mettre dans `core/services/` serait déjà s'écarter des consignes. Et pour deux pages, un composant réutilisable et deux graphiques, un niveau de dossiers suffit largement.
+
+La règle que je m'impose : chaque fichier doit se justifier soit par une ligne du cahier des charges, soit par un problème numéroté de la liste ci-dessus. Si je n'arrive pas à dire lequel, je ne le crée pas.
+
+### L'arborescence
+
+```
+src/app/
+├── app.module.ts                 # déclare tout, provideHttpClient()
+├── app-routing.module.ts         # '' -> Dashboard, 'country/:id' -> CountryDetail, '**' -> NotFound
+├── app.constants.ts              # les constantes partagées par au moins deux fichiers
+├── app.component.*               # bandeau TéléSport + <main><router-outlet>, déclenche le chargement
+├── models/
+│   ├── olympic.ts                # interface Olympic (imposée par la spec)
+│   ├── participation.ts          # interface Participation (imposée par la spec)
+│   ├── indicator.ts              # interface Indicator { label, value }, ce qu'affiche le header
+│   └── load-state.ts             # type LoadState<T> : loading | loaded | empty | error
+├── services/
+│   ├── data.service.ts           # seule porte d'entrée des données (imposé par la spec)
+│   └── olympic.stats.ts          # fonctions pures de calcul : totaux, agrégats par pays, par édition
+├── components/
+│   ├── header/                   # titre + liste d'indicateurs (imposé par la spec)
+│   ├── status-message/           # chargement, aucune donnée, erreur + bouton Réessayer
+│   ├── medals-by-country-chart/  # le camembert du dashboard
+│   └── medals-by-edition-chart/  # la courbe de la page pays
+└── pages/
+    ├── dashboard/                # dashboard-page.component.* + dashboard.view.ts
+    ├── country-detail/           # country-detail-page.component.* + country-detail.view.ts
+    └── not-found/
+```
+
+Huit composants, un service, un fichier de calculs, quatre modèles. Les fichiers `.spec.ts` restent à côté de ce qu'ils testent, comme aujourd'hui.
+
+Le chemin d'une donnée, de sa source jusqu'à l'écran :
+
+```mermaid
+flowchart LR
+  SRC[("olympic.json<br/>puis API REST")] --> DS["DataService<br/>BehaviorSubject&lt;LoadState&gt;"]
+  STATS["olympic.stats.ts<br/>fonctions pures"] --> VD
+  STATS --> VC
+  DS --> VD["dashboard.view.ts"]
+  DS --> VC["country-detail.view.ts"]
+  VD --> DP["DashboardPage"]
+  VC --> CP["CountryDetailPage"]
+  DP --> HD["HeaderComponent"]
+  DP --> PIE["MedalsByCountryChart"]
+  CP --> HD2["HeaderComponent"]
+  CP --> LINE["MedalsByEditionChart"]
+  PIE -. "countrySelected (id)" .-> RT["Router -> /country/:id"]
+  RT -.-> CP
+```
+
+Une seule flèche entre dans le système, et elle part du service. C'est ce qui permet de changer la source sans toucher au reste.
+
+### Qui fait quoi
+
+Les modèles décrivent les données, rien d'autre : pas de méthode, pas de valeur par défaut. `Olympic` et `Participation` sont repris tels quels du cahier des charges. `Indicator` existe parce que le `HeaderComponent` doit itérer sur une liste de couples libellé/valeur. `LoadState<T>` est une union à quatre cas qui décrit où en est un chargement.
+
+`DataService` est le seul fichier de l'application qui sait d'où viennent les données. Il porte un `BehaviorSubject<LoadState<Olympic[]>>`, le remplit au démarrage et le partage entre les deux pages, ce qui supprime le rechargement du JSON à chaque navigation (A1). Trois membres publics suffisent :
+
+```ts
+readonly olympics$: Observable<LoadState<Olympic[]>>;
+getOlympicById(id: number): Observable<LoadState<Olympic | undefined>>;
+load(): void;   // appelé au démarrage, et par le bouton Réessayer
+```
+
+Le `undefined` de `getOlympicById` n'est pas un oubli, c'est le cœur de la réponse à B2 : un pays absent du JSON aujourd'hui, et un 404 de l'API demain, produisent exactement le même cas à traiter dans la page.
+
+`olympic.stats.ts` contient les calculs, en fonctions pures, sans classe ni injection : total des médailles d'un pays, total des athlètes, nombre de participations, nombre de pays, nombre d'éditions, médailles par pays, médailles par édition. Ça sort les agrégats des composants (A3) et ça se teste en trois lignes, sans monter Angular. C'est aussi le seul endroit à modifier si la définition du total change, par exemple si l'API finit par renvoyer le détail or/argent/bronze.
+
+Les composants de `components/` affichent et ne savent rien d'autre. Ils ne connaissent ni `HttpClient`, ni le routeur, ni `DataService`. Le header reçoit un titre et des indicateurs. Les deux composants de graphique reçoivent des données déjà calculées et gèrent le cycle de vie de leur canvas avec `@ViewChild`, `ngAfterViewInit` et `ngOnDestroy`, ce qui règle E1. Le camembert émet un `@Output` avec l'id du pays cliqué, au lieu de naviguer lui-même (B1).
+
+Les pages orchestrent : elles s'abonnent au service, passent le résultat aux composants, et réagissent aux événements. Elles ne calculent rien.
+
+### Le passage par une fonction de vue
+
+C'est le point que je devrai savoir défendre. Chaque page est accompagnée d'un petit fichier `*.view.ts` qui contient une fonction pure : elle prend l'état renvoyé par le service et rend un objet plat, prêt à afficher.
+
+```ts
+// pages/dashboard/dashboard.view.ts
+export interface DashboardView {
+  status: LoadStatus;
+  title: string;
+  indicators: Indicator[];
+  chart: MedalsByCountry[];
+  message: string | null;
+}
+export function toDashboardView(state: LoadState<Olympic[]>): DashboardView { ... }
+```
+
+La page se réduit alors à une ligne, `vm$ = this.data.olympics$.pipe(map(toDashboardView))`, et le template lit `vm.indicators` ou `vm.message` sans jamais avoir à deviner dans quel cas de l'union il se trouve. Pour la page pays, la même fonction traite le cas du pays inconnu : elle renvoie simplement un statut `error` avec un message lisible.
+
+L'intérêt est double. Le template reste bête, donc lisible. Et tout ce qui décide de ce qui s'affiche tient dans une fonction que je peux tester sans TestBed, sans `HttpClient` et sans routeur. Le coût, c'est un fichier de plus par page, et une notion de plus à expliquer.
+
+Côté abonnements, tout passe par le pipe `async` dans les templates. Plus aucun `subscribe` manuel dans les composants, donc plus rien à nettoyer (D3).
+
+### Les patterns, et pourquoi ceux-là
+
+Le Singleton, d'abord, via `@Injectable({ providedIn: 'root' })`. Angular crée une seule instance de `DataService` pour toute l'application, donc les deux pages lisent le même cache. Sans ça, chaque page refait sa requête, ce qui est exactement le défaut A1 que j'ai relevé.
+
+L'Observer ensuite, apporté par RxJS. Le service pousse ses changements d'état dans un `BehaviorSubject`, les pages s'y abonnent via le pipe `async`, et le « Réessayer » du panneau d'erreur consiste à repousser un nouvel état dans le même flux. Le `BehaviorSubject` a un avantage concret sur un simple `Observable` HTTP : il conserve la dernière valeur, donc une page qui arrive plus tard reçoit immédiatement l'état courant.
+
+La séparation composant/service, enfin, que le cours appelle séparation des responsabilités. C'est elle qui structure tout le reste : le service sait où sont les données, les fonctions pures savent les calculer, les pages orchestrent, les composants affichent.
+
+Deux patterns que je n'utilise pas, et je préfère le dire que faire semblant. L'Adapter serait la bonne réponse le jour où le format du serveur cessera de correspondre à mes interfaces ; aujourd'hui le JSON correspond exactement à `Olympic`, donc l'écrire maintenant reviendrait à traduire une langue vers elle-même. Je documente juste l'endroit où il se branchera. Quant au Decorator, je l'utilise sans l'écrire : `@Component`, `@Injectable`, `@Input` et `@Output` sont exactement ça, et c'est Angular qui le fournit.
+
+Un mot sur le vocabulaire, pour éviter un malentendu en soutenance : mon `LoadState` modélise un état par une union de types, ce qui n'est pas le State Pattern du cours, où un objet délègue son comportement à un objet d'état. Je ne revendique donc pas ce pattern.
+
+### Le jour où l'API arrive
+
+C'est l'exigence explicite de l'énoncé, et c'est le meilleur test de l'architecture. Au projet suivant :
+
+- `environment.ts` et `environment.prod.ts` : l'URL change, et c'est tout. Le remplacement de fichier est déjà configuré dans `angular.json`, je l'ai vérifié.
+- `data.service.ts` : le `get` pointe vers l'endpoint, et `getOlympicById` peut devenir un vrai `GET /olympics/:id` au lieu de filtrer la liste. Le type de retour ne bouge pas, donc les pages non plus.
+- `olympic.stats.ts` : inchangé, sauf si le serveur renvoie déjà les agrégats, auquel cas je supprime des fonctions.
+- `components/` et `pages/` : aucun changement. C'est le critère qui compte. Si un changement d'API m'obligeait à modifier un composant, c'est que la frontière serait au mauvais endroit.
+- Si la réponse du serveur diverge de mes interfaces, j'insère l'adaptateur à un seul endroit : `http.get<unknown>()` suivi d'un `map(toOlympics)` dans le service.
+
+### Ce que je n'ajoute pas
+
+Pas de lazy loading : l'application a trois routes et pèse moins d'un mégaoctet, découper le bundle n'apporterait rien de mesurable. Pas de store type NgRx : un `BehaviorSubject` dans un service suffit tant qu'il n'y a qu'une source de données et aucune écriture. Pas de guard ni de resolver : la vérification de l'existence du pays est déjà traitée par la fonction de vue, et un resolver retarderait l'affichage sans donner de meilleur message. Pas de `SharedModule` ni de `CoreModule` : avec huit composants dans un seul module, ils ne feraient qu'ajouter de l'indirection.
+
+Chacun de ces refus a sa condition de réexamen. Le lazy loading devient utile à partir de plusieurs sections indépendantes, le store à partir du moment où l'utilisateur modifie des données, et les modules séparés quand une équipe travaille à plusieurs sur le même dépôt.
+
+### Décisions prises
+
+- On reste en NgModule, et je configure les schematics du CLI avec `standalone: false` avant de générer le moindre composant (H3).
+- Les pages s'appellent `DashboardPageComponent` et `CountryDetailPageComponent`, pour reprendre le vocabulaire du cahier des charges (A7).
+- Les libellés de l'interface restent en anglais, par cohérence avec les maquettes. Je note l'écart : le cahier des charges cite un message « Aucune donnée » en français, ce sera « No data available ».
+- Le total des médailles reste `medalsCount`, faute de détail or/argent/bronze dans les données.
+- J'installe ESLint et je répare les tests cassés avant de commencer à déplacer du code. Deux règles feront respecter le cahier des charges toutes seules : `no-explicit-any` et `max-lines` à 300.
+- Les templates utiliseront les blocs `@if` et `@for` d'Angular 17+ plutôt que `*ngIf` et `*ngFor`.
+
+### Plan de refactorisation pour l'étape 3
+
+Dans cet ordre, un commit par ligne :
+
+1. Outillage : ESLint, schematics en `standalone: false`, réparation des specs existantes.
+2. Les modèles, puis le remplacement des `any` par les interfaces.
+3. `DataService` et `olympic.stats.ts`, avec leurs tests.
+4. Le `HeaderComponent` et le `StatusMessageComponent`.
+5. Les deux composants de graphique.
+6. La page dashboard : fonction de vue, puis branchement sur le service.
+7. La page pays : route en `:id`, fonction de vue, gestion du pays inconnu.
+8. Le nettoyage : styles globaux, `console.log`, code mort, route morte.
+9. Le responsive et l'accessibilité : breakpoints, focus, alternatives textuelles des graphiques.
+10. La documentation : `README.md` et `ARCHITECTURE.md`.
