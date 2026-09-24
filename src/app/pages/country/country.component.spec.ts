@@ -1,17 +1,31 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ActivatedRoute, convertToParamMap, provideRouter, RouterModule } from '@angular/router';
+import { of } from 'rxjs';
 
+import { CountryComponent } from './country.component';
 
-import { CountryComponent } from "./country.component";
-
-describe('DetailComponent', () => {
+describe('CountryComponent', () => {
   let component: CountryComponent;
   let fixture: ComponentFixture<CountryComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      declarations: [ CountryComponent ]
-    })
-    .compileComponents();
+      imports: [RouterModule],
+      declarations: [CountryComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            paramMap: of(convertToParamMap({ countryName: 'Italy' })),
+          },
+        },
+      ],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(CountryComponent);
     component = fixture.componentInstance;
