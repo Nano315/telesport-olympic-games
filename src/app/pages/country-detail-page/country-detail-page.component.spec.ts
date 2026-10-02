@@ -9,6 +9,7 @@ import {
   convertToParamMap,
   ParamMap,
   provideRouter,
+  Router,
   RouterModule,
 } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
@@ -96,12 +97,14 @@ describe('CountryDetailPageComponent', () => {
     expect(fixture.nativeElement.textContent).not.toContain('Italy');
   });
 
-  it('affiche un message clair pour un identifiant inconnu', () => {
+  it('redirige vers la page 404 pour un identifiant inconnu', () => {
+    const router = TestBed.inject(Router);
+    const navigate = spyOn(router, 'navigate');
+
     paramMap.next(convertToParamMap({ id: '404' }));
     loadData();
 
-    const alert = fixture.nativeElement.querySelector('[role="alert"]');
-    expect(alert.textContent).toContain('does not exist');
+    expect(navigate).toHaveBeenCalledWith(['/not-found']);
   });
 
   it('propose toujours le retour à l\'accueil', () => {

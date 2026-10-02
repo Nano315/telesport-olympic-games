@@ -16,6 +16,10 @@ const routes: Routes = [
     component: CountryDetailPageComponent,
   },
   {
+    path: 'not-found',
+    component: NotFoundComponent,
+  },
+  {
     path: '**',
     component: NotFoundComponent,
   },

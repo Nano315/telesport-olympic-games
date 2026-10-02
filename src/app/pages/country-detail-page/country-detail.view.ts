@@ -1,4 +1,3 @@
-import { MESSAGES } from '../../app.constants';
 import { Indicator } from '../../models/indicator';
 import { LoadState, LoadStatus } from '../../models/load-state';
 import { Olympic } from '../../models/olympic';
@@ -46,8 +45,9 @@ export function toCountryDetailView(
   }
 
   const olympic = state.data;
+  // Pays inconnu : la page redirige vers la 404, il n'y a rien à afficher.
   if (!olympic) {
-    return { ...view, status: 'error', message: MESSAGES.unknownCountry };
+    return { ...view, status: 'loading' };
   }
 
   if (olympic.participations.length === 0) {

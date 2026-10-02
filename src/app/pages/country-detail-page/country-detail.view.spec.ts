@@ -27,11 +27,10 @@ describe('toCountryDetailView', () => {
     ]);
   });
 
-  it('traite un pays introuvable comme une erreur lisible', () => {
+  it('n\'affiche rien pour un pays introuvable, la page redirige vers la 404', () => {
     const view = toCountryDetailView({ status: 'loaded', data: undefined });
 
-    expect(view.status).toBe('error');
-    expect(view.message).toBe('This country does not exist.');
+    expect(view.status).toBe('loading');
     expect(view.chart).toEqual([]);
   });
 
