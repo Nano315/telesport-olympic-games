@@ -485,4 +485,4 @@ Les dossiers des pages s'appellent `dashboard-page/` et `country-detail-page/`, 
 
 Enfin, une surprise à l'outillage : `ng test` ne compilait pas à cause de la spec héritée du CLI, et une fois ce problème corrigé, le `require.context` de `src/test.ts` n'était plus supporté par le builder d'Angular 18. Ce fichier a été supprimé, le builder découvrant seul les fichiers `*.spec.ts`. Ce point figurait dans mes notes comme dette mineure (H4) ; il bloquait en réalité toute la suite.
 
-Résultat : `ng lint` passe sans erreur, `ng test` exécute 51 tests, et aucun `any` ne subsiste. L'architecture livrée est décrite dans [ARCHITECTURE.md](ARCHITECTURE.md).
+Résultat : `ng lint` passe sans erreur et aucun `any` ne subsiste. Les tests automatisés écrits en chemin ont ensuite été retirés, l'énoncé n'en attendant aucun : les vérifications se font à la main. L'architecture livrée est décrite dans [ARCHITECTURE.md](ARCHITECTURE.md).

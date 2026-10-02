@@ -19,14 +19,7 @@ Les autres commandes utiles :
 
 ```bash
 npm run build   # build de production dans dist/
-npm test        # tests unitaires (Karma + Jasmine)
 npm run lint    # ESLint sur le TypeScript et les templates
-```
-
-Pour lancer les tests sans fenêtre de navigateur, par exemple en intégration continue :
-
-```bash
-npm test -- --watch=false --browsers=ChromeHeadless
 ```
 
 ## Les deux pages
@@ -68,4 +61,4 @@ Les graphiques utilisent Chart.js, dans des composants dédiés qui gèrent la c
 
 `npm run lint` passe sans erreur. La règle `no-explicit-any` et la limite de 300 lignes par fichier, toutes deux exigées par le cahier des charges, sont vérifiées automatiquement.
 
-`npm test` exécute 51 tests : les calculs, le service (succès, données vides, erreur réseau, identifiant inconnu), les fonctions de vue, les composants et les deux pages.
+Le projet n'a pas de tests automatisés : les vérifications se font à la main, en parcourant les deux pages, une URL de pays inexistant et une URL inconnue.
