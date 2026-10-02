@@ -2,63 +2,78 @@
 
 Application Angular qui présente l'historique des Jeux olympiques pour la chaîne TéléSport : un tableau de bord des médailles par pays, et une page de détail par pays.
 
-Projet 2 du parcours Lead Développeur Full-Stack Java/Angular (OpenClassrooms). Le code de départ fourni a été analysé puis restructuré ; l'analyse et les choix d'architecture sont consignés dans [notes-architecture.md](notes-architecture.md), et l'architecture retenue est décrite dans [ARCHITECTURE.md](ARCHITECTURE.md).
+Projet 2 du parcours Lead Développeur Full-Stack Java/Angular (OpenClassrooms).
 
-## Démarrer
+## Sommaire
 
-Il faut Node en version 18.19, 20.11 ou 22 (versions supportées par Angular 18) et npm.
+- [Prérequis](#prérequis)
+- [Installation et lancement](#installation-et-lancement)
+- [Les pages](#les-pages)
+- [Structure du projet](#structure-du-projet)
+- [Captures d'écran](#captures-décran)
+- [Choix techniques](#choix-techniques)
+- [Documentation](#documentation)
+
+## Prérequis
+
+- Node.js 18.19, 20.11 ou 22 — ce sont les versions supportées par Angular 18. Node 24 fait tourner le projet, mais avec un avertissement et des plantages possibles du serveur de développement.
+- npm 9 ou plus récent.
+- Angular CLI 18 : inutile de l'installer globalement, les commandes ci-dessous passent par le CLI du projet.
+
+## Installation et lancement
 
 ```bash
 npm ci
 npm start
 ```
 
-L'application est servie sur http://localhost:4200.
-
-Les autres commandes utiles :
+L'application est servie sur http://localhost:4200 et se recharge à chaque modification.
 
 ```bash
 npm run build   # build de production dans dist/
 npm run lint    # ESLint sur le TypeScript et les templates
 ```
 
-## Les deux pages
+## Les pages
 
-`/` affiche le titre de la page, le nombre de pays, le nombre d'éditions et un camembert des médailles par pays. Choisir un pays ouvre sa page de détail.
+| Route | Contenu |
+| --- | --- |
+| `/` | Nombre de pays, nombre d'éditions, et un camembert des médailles. Un clic sur un pays ouvre son détail. |
+| `/country/:id` | Participations, total de médailles, total d'athlètes, courbe par édition, et un bouton de retour. |
+| toute autre URL | Page 404. Un identifiant de pays inexistant y mène aussi. |
 
-`/country/:id` affiche le nom du pays, son nombre de participations, son total de médailles, son total d'athlètes, et la courbe de ses médailles édition par édition. Un bouton ramène à l'accueil. Un identifiant inconnu affiche un message d'erreur et le même bouton de retour.
-
-Toute autre URL tombe sur une page 404.
-
-## Structure
+## Structure du projet
 
 ```
 src/app/
-├── models/        interfaces des données (Olympic, Participation, Indicator, LoadState)
-├── services/      DataService (accès aux données) et olympic.stats.ts (calculs purs)
-├── components/    composants d'affichage réutilisables (header, états, graphiques)
-├── pages/         les trois pages routées, chacune avec sa fonction de vue
-└── app.*          module, routage, layout et constantes partagées
+├── models/        les formes de données : Olympic, Participation, Indicator, LoadState
+├── services/      DataService (les données) et olympic.stats.ts (les calculs)
+├── components/    header, messages d'état, les deux graphiques
+├── pages/         dashboard, détail d'un pays, 404
+└── app.*          module, routage, layout commun, constantes
+src/assets/mock/   olympic.json, la source de données
 ```
 
-Les données viennent de `src/assets/mock/olympic.json`, dont l'URL est déclarée dans `src/environments/`.
+## Captures d'écran
 
-## Décisions
+| Dashboard | Détail d'un pays |
+| --- | --- |
+| ![Dashboard sur ordinateur](screenshots/dashboard-desktop.png) | ![Détail d'un pays sur ordinateur](screenshots/country-desktop.png) |
+| ![Dashboard sur mobile](screenshots/dashboard-mobile.png) | ![Détail d'un pays sur mobile](screenshots/country-mobile.png) |
+
+## Choix techniques
 
 Les données ne sont chargées qu'une fois par session. `DataService` les publie dans un `BehaviorSubject` que les deux pages lisent, au lieu de refaire une requête à chaque navigation.
 
-Chaque page est accompagnée d'une fonction pure (`dashboard.view.ts`, `country-detail.view.ts`) qui traduit l'état du service en données d'affichage. Les templates n'ont donc aucune décision à prendre, et ces fonctions se testent sans monter Angular.
+L'URL de détail porte l'identifiant du pays et non son nom, parce que c'est ce qu'exposera l'API du projet suivant.
 
-L'URL de détail porte l'identifiant du pays et non son nom, parce que c'est ce qu'exposera l'API du projet suivant. Un pays introuvable suit le même chemin qu'un futur 404 : `getOlympicById` renvoie `undefined`, et la fonction de vue en fait un message d'erreur.
-
-Les libellés de l'interface sont en anglais, comme les maquettes. Le message « Aucune donnée » demandé par le cahier des charges est donc rendu par « No data available ».
+Les libellés de l'interface sont en anglais, comme les maquettes.
 
 Le projet reste en NgModule, conformément aux consignes de l'exercice. Les schematics du CLI sont configurés en `standalone: false` pour que `ng generate` produise des composants déclarables dans `AppModule`.
 
-Les graphiques utilisent Chart.js, dans des composants dédiés qui gèrent la création et la destruction de leur instance. Chaque graphique est doublé d'un tableau de données, ce qui le rend lisible au clavier et au lecteur d'écran.
+Il n'y a pas de tests automatisés : l'énoncé n'en attend pas, les vérifications se font à la main.
 
-## Qualité
+## Documentation
 
-`npm run lint` passe sans erreur. La règle `no-explicit-any` et la limite de 300 lignes par fichier, toutes deux exigées par le cahier des charges, sont vérifiées automatiquement.
-
-Le projet n'a pas de tests automatisés : les vérifications se font à la main, en parcourant les deux pages, une URL de pays inexistant et une URL inconnue.
+- [ARCHITECTURE.md](ARCHITECTURE.md) — la structure, les composants, le service, et ce qui changera le jour du branchement sur l'API.
+- [notes-architecture.md](notes-architecture.md) — l'analyse du code de départ et les choix d'architecture.
