@@ -4,6 +4,13 @@
   max-width: 60rem;
 }
 
+.intro {
+  margin: 1.5rem auto 0;
+  max-width: 38rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
 app-medals-by-country-chart {
   display: block;
   margin-top: 2rem;

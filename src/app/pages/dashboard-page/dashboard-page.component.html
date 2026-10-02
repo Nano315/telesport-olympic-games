@@ -1,6 +1,11 @@
 @if (view$ | async; as view) {
   <app-header [title]="view.title" [indicators]="view.indicators" />
 
+  <p class="intro">
+    This dashboard shows how many medals each country has won across every
+    edition of the Olympic Games.
+  </p>
+
   @if (view.status === 'loaded') {
     <app-medals-by-country-chart
       [data]="view.chart"
